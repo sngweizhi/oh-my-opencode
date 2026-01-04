@@ -75,9 +75,7 @@ export function buildKeyTriggersSection(agents: AvailableAgent[], skills: Availa
 **BLOCKING: Check skills FIRST before any action.**
 If a skill matches, invoke it IMMEDIATELY via \`skill\` tool.
 
-${allTriggers.join("\n")}
-- **GitHub mention (@mention in issue/PR)** → This is a WORK REQUEST. Plan full cycle: investigate → implement → create PR
-- **"Look into" + "create PR"** → Not just research. Full implementation cycle expected.`
+${allTriggers.join("\n")}`
 }
 
 function extractTriggerFromDescription(description: string): string {
