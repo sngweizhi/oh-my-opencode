@@ -178,7 +178,7 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
         const defaultModel = config.model as string | undefined;
         const plannerSisyphusBase = {
           model: (migratedPlanConfig as Record<string, unknown>).model ?? defaultModel,
-          mode: "all" as const,
+          mode: "primary" as const,
           prompt: PLAN_SYSTEM_PROMPT,
           permission: PLAN_PERMISSION,
           description: `${configAgent?.plan?.description ?? "Plan agent"} (OhMyOpenCode version)`,
@@ -282,24 +282,31 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     };
 
     const builtinCommands = loadBuiltinCommands(pluginConfig.disabled_commands);
-    const userCommands = (pluginConfig.claude_code?.commands ?? true)
-      ? loadUserCommands()
-      : {};
-    const opencodeGlobalCommands = loadOpencodeGlobalCommands();
     const systemCommands = (config.command as Record<string, unknown>) ?? {};
-    const projectCommands = (pluginConfig.claude_code?.commands ?? true)
-      ? loadProjectCommands()
-      : {};
-    const opencodeProjectCommands = loadOpencodeProjectCommands();
 
-    const userSkills = (pluginConfig.claude_code?.skills ?? true)
-      ? loadUserSkills()
-      : {};
-    const projectSkills = (pluginConfig.claude_code?.skills ?? true)
-      ? loadProjectSkills()
-      : {};
-    const opencodeGlobalSkills = loadOpencodeGlobalSkills();
-    const opencodeProjectSkills = loadOpencodeProjectSkills();
+    // Parallel loading of all commands and skills for faster startup
+    const includeClaudeCommands = pluginConfig.claude_code?.commands ?? true;
+    const includeClaudeSkills = pluginConfig.claude_code?.skills ?? true;
+
+    const [
+      userCommands,
+      projectCommands,
+      opencodeGlobalCommands,
+      opencodeProjectCommands,
+      userSkills,
+      projectSkills,
+      opencodeGlobalSkills,
+      opencodeProjectSkills,
+    ] = await Promise.all([
+      includeClaudeCommands ? loadUserCommands() : Promise.resolve({}),
+      includeClaudeCommands ? loadProjectCommands() : Promise.resolve({}),
+      loadOpencodeGlobalCommands(),
+      loadOpencodeProjectCommands(),
+      includeClaudeSkills ? loadUserSkills() : Promise.resolve({}),
+      includeClaudeSkills ? loadProjectSkills() : Promise.resolve({}),
+      loadOpencodeGlobalSkills(),
+      loadOpencodeProjectSkills(),
+    ]);
 
     config.command = {
       ...builtinCommands,

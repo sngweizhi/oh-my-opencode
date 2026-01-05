@@ -21,7 +21,7 @@ export function createKeywordDetectorHook(ctx: PluginInput) {
       }
     ): Promise<void> => {
       const promptText = extractPromptText(output.parts)
-      const detectedKeywords = detectKeywordsWithType(removeCodeBlocks(promptText))
+      const detectedKeywords = detectKeywordsWithType(removeCodeBlocks(promptText), input.agent)
 
       if (detectedKeywords.length === 0) {
         return
@@ -30,6 +30,8 @@ export function createKeywordDetectorHook(ctx: PluginInput) {
       const hasUltrawork = detectedKeywords.some((k) => k.type === "ultrawork")
       if (hasUltrawork) {
         log(`[keyword-detector] Ultrawork mode activated`, { sessionID: input.sessionID })
+
+        output.message.variant = "max"
 
         ctx.client.tui
           .showToast({

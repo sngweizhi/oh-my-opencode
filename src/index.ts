@@ -34,10 +34,10 @@ import {
 } from "./features/context-injector";
 import { createGoogleAntigravityAuthPlugin } from "./auth/antigravity";
 import {
-  discoverUserClaudeSkillsAsync,
-  discoverProjectClaudeSkillsAsync,
-  discoverOpencodeGlobalSkillsAsync,
-  discoverOpencodeProjectSkillsAsync,
+  discoverUserClaudeSkills,
+  discoverProjectClaudeSkills,
+  discoverOpencodeGlobalSkills,
+  discoverOpencodeProjectSkills,
   mergeSkills,
 } from "./features/opencode-skill-loader";
 import { createBuiltinSkills } from "./features/builtin-skills";
@@ -205,10 +205,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   });
   const includeClaudeSkills = pluginConfig.claude_code?.skills !== false;
   const [userSkills, globalSkills, projectSkills, opencodeProjectSkills] = await Promise.all([
-    includeClaudeSkills ? discoverUserClaudeSkillsAsync() : Promise.resolve([]),
-    discoverOpencodeGlobalSkillsAsync(),
-    includeClaudeSkills ? discoverProjectClaudeSkillsAsync() : Promise.resolve([]),
-    discoverOpencodeProjectSkillsAsync(),
+    includeClaudeSkills ? discoverUserClaudeSkills() : Promise.resolve([]),
+    discoverOpencodeGlobalSkills(),
+    includeClaudeSkills ? discoverProjectClaudeSkills() : Promise.resolve([]),
+    discoverOpencodeProjectSkills(),
   ]);
   const mergedSkills = mergeSkills(
     builtinSkills,
@@ -255,6 +255,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     },
 
     "chat.message": async (input, output) => {
+      if (input.agent === "Sisyphus") {
+        (output.message as Record<string, unknown>).variant = "max"
+      }
+
       await claudeCodeHooks["chat.message"]?.(input, output);
       await keywordDetector?.["chat.message"]?.(input, output);
       await contextInjector["chat.message"]?.(input, output);
