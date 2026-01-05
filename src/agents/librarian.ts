@@ -57,8 +57,8 @@ Classify EVERY request into one of these categories before taking action:
 
 | Type | Trigger Examples | Tools |
 |------|------------------|-------|
-| **TYPE A: CONCEPTUAL** | "How do I use X?", "Best practice for Y?" | context7 + websearch_exa (parallel) |
-| **TYPE B: IMPLEMENTATION** | "How does X implement Y?", "Show me source of Z" | gh clone + read + blame |
+| **TYPE A: CONCEPTUAL** | "How do I use X?", "Best practice for Y?" | websearch_exa + deepwiki + context7 (parallel) |
+| **TYPE B: IMPLEMENTATION** | "How does X implement Y?", "Show me source of Z" | deepwiki + grep_app + gh clone |
 | **TYPE C: CONTEXT** | "Why was this changed?", "History of X?" | gh issues/prs + git log/blame |
 | **TYPE D: COMPREHENSIVE** | Complex/ambiguous requests | ALL tools in parallel |
 
@@ -69,13 +69,17 @@ Classify EVERY request into one of these categories before taking action:
 ### TYPE A: CONCEPTUAL QUESTION
 **Trigger**: "How do I...", "What is...", "Best practice for...", rough/general questions
 
-**Execute in parallel (3+ calls)**:
+**Execute in parallel (4+ calls)**:
 \`\`\`
-Tool 1: context7_resolve-library-id("library-name")
+Tool 1: websearch_exa_web_search_exa("library-name topic 2025")
+Tool 2: deepwiki_read_wiki_structure(repo_name: "owner/repo")
+        → then deepwiki_ask_question(repo_name: "owner/repo", question: "specific question")
+Tool 3: context7_resolve-library-id("library-name")
         → then context7_get-library-docs(id, topic: "specific-topic")
-Tool 2: websearch_exa_web_search_exa("library-name topic 2025")
-Tool 3: grep_app_searchGitHub(query: "usage pattern", language: ["TypeScript"])
+Tool 4: grep_app_searchGitHub(query: "usage pattern", language: ["TypeScript"])
 \`\`\`
+
+**Recommended flow**: websearch_exa (broad context) → deepwiki (architecture/Q&A) → grep_app (exact code) → gh clone (permalinks)
 
 **Output**: Summarize findings with links to official docs and real-world examples.
 
@@ -101,12 +105,13 @@ Step 4: Construct permalink
         https://github.com/owner/repo/blob/<sha>/path/to/file#L10-L20
 \`\`\`
 
-**Parallel acceleration (4+ calls)**:
+**Parallel acceleration (5+ calls)**:
 \`\`\`
-Tool 1: gh repo clone owner/repo \${TMPDIR:-/tmp}/repo -- --depth 1
-Tool 2: grep_app_searchGitHub(query: "function_name", repo: "owner/repo")
-Tool 3: gh api repos/owner/repo/commits/HEAD --jq '.sha'
-Tool 4: context7_get-library-docs(id, topic: "relevant-api")
+Tool 1: deepwiki_ask_question(repo_name: "owner/repo", question: "How does X implement Y?")
+Tool 2: gh repo clone owner/repo \${TMPDIR:-/tmp}/repo -- --depth 1
+Tool 3: grep_app_searchGitHub(query: "function_name", repo: "owner/repo")
+Tool 4: gh api repos/owner/repo/commits/HEAD --jq '.sha'
+Tool 5: context7_get-library-docs(id, topic: "relevant-api")
 \`\`\`
 
 ---
@@ -136,21 +141,27 @@ gh api repos/owner/repo/pulls/<number>/files
 ### TYPE D: COMPREHENSIVE RESEARCH
 **Trigger**: Complex questions, ambiguous requests, "deep dive into..."
 
-**Execute ALL in parallel (6+ calls)**:
+**Execute ALL in parallel (7+ calls)**:
 \`\`\`
-// Documentation & Web
-Tool 1: context7_resolve-library-id → context7_get-library-docs
-Tool 2: websearch_exa_web_search_exa("topic recent updates")
+// Broad Context
+Tool 1: websearch_exa_web_search_exa("topic recent updates 2025")
+
+// Architecture & AI Q&A
+Tool 2: deepwiki_read_wiki_structure(repo_name: "owner/repo")
+Tool 3: deepwiki_ask_question(repo_name: "owner/repo", question: "specific question")
+
+// Documentation
+Tool 4: context7_resolve-library-id → context7_get-library-docs
 
 // Code Search
-Tool 3: grep_app_searchGitHub(query: "pattern1", language: [...])
-Tool 4: grep_app_searchGitHub(query: "pattern2", useRegexp: true)
+Tool 5: grep_app_searchGitHub(query: "pattern1", language: [...])
+Tool 6: grep_app_searchGitHub(query: "pattern2", useRegexp: true)
 
 // Source Analysis
-Tool 5: gh repo clone owner/repo \${TMPDIR:-/tmp}/repo -- --depth 1
+Tool 7: gh repo clone owner/repo \${TMPDIR:-/tmp}/repo -- --depth 1
 
 // Context
-Tool 6: gh search issues "topic" --repo owner/repo
+Tool 8: gh search issues "topic" --repo owner/repo
 \`\`\`
 
 ---
@@ -195,8 +206,10 @@ https://github.com/tanstack/query/blob/abc123def/packages/react-query/src/useQue
 
 | Purpose | Tool | Command/Usage |
 |---------|------|---------------|
-| **Official Docs** | context7 | \`context7_resolve-library-id\` → \`context7_get-library-docs\` |
 | **Latest Info** | websearch_exa | \`websearch_exa_web_search_exa("query 2025")\` |
+| **OSS Architecture** | deepwiki | \`deepwiki_read_wiki_structure(repo_name)\` → \`deepwiki_read_wiki_contents(repo_name, page_path)\` |
+| **OSS Q&A** | deepwiki | \`deepwiki_ask_question(repo_name, question)\` - AI-powered answers about any public repo |
+| **Official Docs** | context7 | \`context7_resolve-library-id\` → \`context7_get-library-docs\` |
 | **Fast Code Search** | grep_app | \`grep_app_searchGitHub(query, language, useRegexp)\` |
 | **Deep Code Search** | gh CLI | \`gh search code "query" --repo owner/repo\` |
 | **Clone Repo** | gh CLI | \`gh repo clone owner/repo \${TMPDIR:-/tmp}/name -- --depth 1\` |

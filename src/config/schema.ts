@@ -232,6 +232,10 @@ export const RalphLoopConfigSchema = z.object({
   state_dir: z.string().optional(),
 })
 
+export const McpApiKeysSchema = z.object({
+  exa_api_key: z.string().optional(),
+})
+
 export const OhMyOpenCodeConfigSchema = z.object({
   $schema: z.string().optional(),
   disabled_mcps: z.array(McpNameSchema).optional(),
@@ -248,6 +252,7 @@ export const OhMyOpenCodeConfigSchema = z.object({
   auto_update: z.boolean().optional(),
   skills: SkillsConfigSchema.optional(),
   ralph_loop: RalphLoopConfigSchema.optional(),
+  mcp_api_keys: McpApiKeysSchema.optional(),
 })
 
 export type OhMyOpenCodeConfig = z.infer<typeof OhMyOpenCodeConfigSchema>

@@ -1,5 +1,6 @@
 export const websearch_exa = {
-  type: "remote" as const,
-  url: "https://mcp.exa.ai/mcp?tools=web_search_exa",
+  type: "local" as const,
+  command: ["npx", "-y", "exa-mcp-server"],
+  environment: {}, // API key injected by createBuiltinMcps from oh-my-opencode.json
   enabled: true,
 }

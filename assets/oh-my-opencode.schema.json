@@ -15,7 +15,8 @@
         "enum": [
           "websearch_exa",
           "context7",
-          "grep_app"
+          "grep_app",
+          "deepwiki"
         ]
       }
     },
@@ -1659,6 +1660,14 @@
           "maximum": 1000
         },
         "state_dir": {
+          "type": "string"
+        }
+      }
+    },
+    "mcp_api_keys": {
+      "type": "object",
+      "properties": {
+        "exa_api_key": {
           "type": "string"
         }
       }
